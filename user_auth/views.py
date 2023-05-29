@@ -10,10 +10,24 @@ from .serializers import UserSerializer, LoginSerializer
 
 
 class RegistrationView(generics.CreateAPIView):
+    """
+    API view for user registration.
+    """
     serializer_class = UserSerializer
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST request for user registration.
+
+        Args:
+            request: The request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The response containing the registered user details.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -30,7 +44,19 @@ class RegistrationView(generics.CreateAPIView):
 
 
 class LoginView(APIView):
+    """
+    API view for user login.
+    """
     def post(self, request):
+        """
+        Handle POST request for user login.
+
+        Args:
+            request: The request object.
+
+        Returns:
+            Response: The response containing the access token.
+        """
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -45,6 +71,15 @@ class LoginView(APIView):
 
     @staticmethod
     def generate_token(user):
+        """
+        Generate a JWT token for the authenticated user.
+
+        Args:
+            user: The authenticated user object.
+
+        Returns:
+            str: The JWT token.
+        """
         payload = {
             'user_id': user.id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
@@ -54,9 +89,23 @@ class LoginView(APIView):
 
 
 class GetUserView(generics.RetrieveAPIView):
+    """
+    API view for retrieving user details.
+    """
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET request for retrieving user details.
+
+        Args:
+            request: The request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The response containing the serialized user data.
+        """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)

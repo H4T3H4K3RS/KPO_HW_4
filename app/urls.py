@@ -1,14 +1,12 @@
-from django.urls import path
-from .views import (
-    OrderCreateView, OrderProcessingView, OrderDetailView, DishDetailView, MenuView,
-    DishListView
-)
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import DishViewSet, OrderViewSet, MenuView
+
+router = DefaultRouter()
+router.register(r'dishes', DishViewSet)
+router.register(r'orders', OrderViewSet)
 
 urlpatterns = [
-    path('api/dishes/', DishListView.as_view()),
-    path('api/dishes/<int:dish_id>/', DishDetailView.as_view()),
-    path('api/orders/create/', OrderCreateView.as_view()),
-    path('api/orders/process/<int:order_id>/', OrderProcessingView.as_view()),
-    path('api/orders/detail/<int:order_id>/', OrderDetailView.as_view()),
-    path('api/menu/', MenuView.as_view()),
+    path('api/', include(router.urls)),
+    path('api/menu/', MenuView.as_view({'get': 'list'})),
 ]

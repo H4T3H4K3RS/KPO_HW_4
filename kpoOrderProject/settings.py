@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,10 +19,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0t2$5j6=09(m#(oms7@*bn=m!((jps4h8(a^x(a()fhdi*u&@n'
-
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-0t2$5j6=09(m#(oms7@*bn=m!((jps4h8(a^x(a()fhdi*u&@n")
+BOT_SECRET = os.getenv("BOT_SECRET", "bot_secret")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = []
 
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "user_auth.apps.UserAuthConfig",
     'rest_framework',
     'corsheaders',
+    "django_filters",
 ]
 
 MIDDLEWARE = [

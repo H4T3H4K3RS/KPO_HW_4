@@ -1,15 +1,19 @@
-echo ====CREATING DB [START]====
-python create_db.py
-echo ====CREATING DB [END]==== 
+#!/bin/bash
+echo ====CREATING MIGRATIONS [START]====
+python manage.py makemigrations
+echo ====CREATING MIGRATIONS [END]====
 
-echo ====CREATING MIGRATIONS [START]==== 
-python manage.py makemigrations 
-echo ====CREATING MIGRATIONS [END]==== 
+echo ====MIGRATING [START]====
+python manage.py migrate
+echo ====MIGRATING [END]====
 
+echo ====RUNNING TESTS [START]====
+python manage.py test
+echo ====RUNNING TESTS [END]====
 
-echo ====MIGRATING [START]==== 
-python manage.py migrate 
-echo ====MIGRATING [END]==== 
+echo ====LOADING DUMP [START]====
+python manage.py loaddata database.json
+echo ====LOADING DUMP [END]====
 
-echo ====RUNNING [START]==== 
-python manage.py runserver 0.0.0.0:8080 
+echo ====RUNNING SERVER [START]====
+python manage.py runserver 0.0.0.0:8000 --noreload
