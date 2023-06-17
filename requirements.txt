@@ -6,9 +6,14 @@ django-cors-headers==4.0.0
 django-filter==23.2
 django-rest-framework==0.1.0
 djangorestframework==3.14.0
+drf-yasg==1.21.6
 idna==3.4
+inflection==0.5.1
+packaging==23.1
 PyJWT==2.7.0
 pytz==2023.3
+PyYAML==6.0
 requests==2.31.0
 sqlparse==0.4.4
+uritemplate==4.1.1
 urllib3==1.26.16

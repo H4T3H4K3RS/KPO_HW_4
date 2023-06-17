@@ -9,6 +9,6 @@ RUN apt-get update && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-ENV DJANGO_SETTINGS_MODULE=kpoOrderProject.settings
+ENV DJANGO_SETTINGS_MODULE=kpoColloquiumProject.settings
 EXPOSE 8000
 CMD ["bash", "build.sh"]

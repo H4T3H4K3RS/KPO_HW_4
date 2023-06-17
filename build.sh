@@ -11,9 +11,5 @@ echo ====RUNNING TESTS [START]====
 python manage.py test
 echo ====RUNNING TESTS [END]====
 
-echo ====LOADING DUMP [START]====
-python manage.py loaddata database.json
-echo ====LOADING DUMP [END]====
-
 echo ====RUNNING SERVER [START]====
 python manage.py runserver 0.0.0.0:8000 --noreload

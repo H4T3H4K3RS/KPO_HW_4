@@ -1,120 +1,78 @@
-import json
-
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from django.urls import reverse
 from rest_framework import status
-from .models import Order, Dish
-from .serializers import OrderSerializer
-
-User = get_user_model()
+from rest_framework.test import APITestCase, APIClient
+from .models import Task
 
 
-class OrderTests(TestCase):
+class TaskTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
-        self.client.force_authenticate(user=self.user)
 
-    def test_create_order(self):
+    def test_create_task(self):
         """
-        Test creating a new order.
+        Test creating a new task.
         """
-        dish = Dish.objects.create(name='Pizza', price=10.99, quantity=5)
-        data = {
-            'special_requests': 'Extra sauce',
-            'dishes': [
-                {
-                    'id': dish.id,
-                    'quantity': 2
-                }
-            ]
-        }
-        response = self.client.post('/api/orders/', data=json.dumps(data),
-                                    content_type='application/json')
+        url = reverse('task-list')
+        data = {'title': 'New Task', 'description': 'Task description'}
+        response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        order = Order.objects.get(pk=response.data['id'])
-        serializer = OrderSerializer(order)
-        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(Task.objects.count(), 1)
+        self.assertEqual(Task.objects.get().title, 'New Task')
 
-    def test_create_empty_order(self):
+    def test_get_task_list(self):
         """
-        Test creating a new order.
+        Test retrieving a list of tasks.
         """
-        data = {
-            'special_requests': 'Extra sauce',
-            'dishes': []
-        }
-        response = self.client.post('/api/orders/', data=json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        url = reverse('task-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_order_insufficient_quantity(self):
+    def test_get_task_detail(self):
         """
-        Test creating a new order with insufficient quantity of dishes.
+        Test retrieving a specific task.
         """
-        dish = Dish.objects.create(name='Pizza', price=10.99, quantity=5)
-        data = {
-            'special_requests': 'Extra sauce',
-            'dishes': [
-                {
-                    'id': dish.id,
-                    'quantity': 10
-                }
-            ]
-        }
-        response = self.client.post('/api/orders/', data=json.dumps(data),
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        task = Task.objects.create(title='Test Task', description='Task description')
+        url = reverse('task-detail', kwargs={'pk': task.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'Test Task')
 
-    def test_process_order_already_processed(self):
+    def test_update_task(self):
         """
-        Test processing an order that is already processed.
+        Test partially updating a task using PATCH.
         """
-        order = Order.objects.create(user=self.user, status='completed')
-        response = self.client.post(f'/api/orders/{order.id}/process/')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        task = Task.objects.create(title='Test Task', description='Task description')
+        url = reverse('task-detail', kwargs={'pk': task.pk})
+        data = {'title': 'Updated Task'}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Task.objects.get().title, 'Updated Task')
 
-    def test_process_order_not_found(self):
-        """
-        Test processing an order that doesn't exist.
-        """
-        response = self.client.post('/api/orders/9999/process/')
+    def test_delete_task(self):
+        task = Task.objects.create(title='Test Task', description='Task description')
+        url = reverse('task-detail', kwargs={'pk': task.pk})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Task.objects.count(), 0)
+
+    def test_delete_task_with_invalid_pk(self):
+        url = reverse('task-detail', kwargs={'pk': 1})
+        response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Task.objects.count(), 0)
 
+    def test_create_task_with_invalid_data(self):
+        """
+        Test creating a new task with invalid data.
+        """
+        url = reverse('task-list')
+        invalid_data = {'description': 'Task description'}  # Missing 'title' field
+        response = self.client.post(url, invalid_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-class DishTests(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpassword', is_superuser=True)
-        self.client.force_authenticate(user=self.user)
-
-    def test_create_dish(self):
-        """
-        Test creating a new dish.
-        """
-        data = {
-            'name': 'Pizza',
-            'description': 'A delicious pizza.',
-            'price': 10.99,
-            'quantity': 10,
-        }
-        response = self.client.post('/api/dishes/', data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        dish = Dish.objects.get(pk=response.data['id'])
-        self.assertEqual(dish.name, 'Pizza')
-
-    def test_create_dish_not_manager(self):
-        """
-        Test creating a new dish as a non-manager.
-        """
-        self.user.is_superuser = False
-        self.user.save()
-        data = {
-            'name': 'Pizza',
-            'description': 'A non-delicious pizza.',
-            'price': 10.99,
-            'quantity': 10
-        }
-        response = self.client.post('/api/dishes/', data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_update_task_with_invalid_data(self):
+        task = Task.objects.create(title='Test Task', description='Task description')
+        url = reverse('task-detail', kwargs={'pk': task.pk})
+        invalid_data = {'title': ''}
+        response = self.client.put(url, invalid_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
